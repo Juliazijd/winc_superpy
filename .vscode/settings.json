@@ -1,0 +1,10 @@
+{
+    "python.linting.pylintEnabled": false,
+    "python.linting.enabled": true,
+    "cSpell.words": [
+        "edate",
+        "pyplot",
+        "sdate",
+        "Winc"
+    ]
+}
