@@ -1,10 +1,11 @@
-import sys
-import os
+import argparse
+
+from matplotlib.pyplot import title
 from helpers.buy_sell_products import buy_product, sell_product
 from helpers.report_inventory import report_inventory
 from helpers.report_finance import report_revenue, report_profit
 from helpers.display_graphic import display_graphic
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from rich.console import Console
 
 __winc_id__ = "a2bc36ea784242e4989deb157d527ba0"
@@ -12,73 +13,107 @@ __human_name__ = "superpy"
 
 
 console = Console()
+today = datetime.today().strftime("%d/%m/%Y")
 
-today = date.today().strftime("%d/%m/%Y")
-yesterday = (date.today() - timedelta(days=1)).strftime("%d/%m/%Y")
+
+# Advances time by given amount of days.
+def advance_time(days=0):
+    currentday = open("data/date.txt", "r").read()
+    if len(currentday) == 0 and days == 0:
+        new_date = today
+    elif len(currentday) == 0 and days != 0:
+        currentday = datetime.strptime(today, "%d/%m/%Y")
+        new_date = (currentday + timedelta(days=days)).strftime("%d/%m/%Y")
+        open("data/date.txt", "w").write(new_date)
+    else:
+        currentday = datetime.strptime(currentday, "%d/%m/%Y")
+        new_date = (currentday + timedelta(days=days)).strftime("%d/%m/%Y")
+        open("data/date.txt", "w").write(new_date)
+
+    return new_date
+
+# Checks if date is given in valid format.
+def valid_date(s):
+    try:
+        return datetime.strptime(s, "%d/%m/%Y").strftime("%d/%m/%Y")
+    except ValueError:
+        msg = "not a valid date: {0!r}".format(s)
+        raise argparse.ArgumentTypeError(msg)
+
+
+# Creates all arguments for the command line
+def parser():
+    parser = argparse.ArgumentParser(description="SuperPy Inventory")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    parser._positionals.title = "Positional arguments"
+    parser._optionals.title = "Optional arguments"
+
+    advance = subparsers.add_parser("advance-time", help="Advance time with given amount of days")
+    advance.add_argument("-d", "--days", type=int, help="Amount of days", required=True)
+
+    buy = subparsers.add_parser("buy", help="Buy product and add to inventory")
+    buy.add_argument("-n", "--name", type=str, help="Name of product", required=True)
+    buy.add_argument("-p", "--price", type=float, help="Price of product per unit", required=True)
+    buy.add_argument("-q", "--quantity", type=int, help="Quantity of product", required=True)
+    buy.add_argument("-e", "--exp_date", type=valid_date, help="Expiration date of product - format dd/mm/yyyy", required=True)
+
+    sell = subparsers.add_parser("sell", help="Sell product, remove from inventory and add to sold list")
+    sell.add_argument("-n", "--name", type=str, help="Name of sold product", required=True)
+    sell.add_argument("-p", "--price", type=float, help="Sell price of product per unit", required=True)
+    sell.add_argument("-q", "--quantity", type=int, help="Sold quantity of product", required=True)
+
+    inventory = subparsers.add_parser("report_inventory", help="Report inventory of entered date")
+    inventory.add_argument("-d", "--date", type=valid_date, help="Report inventory - format dd/mm/yyyy", default=advance_time())
+
+    revenue = subparsers.add_parser("report_revenue", help="Report revenue of entered date")
+    revenue.add_argument("-d", "--date", type=valid_date, help="Report revenue - format dd/mm/yyyy", default=advance_time())
+
+    profit = subparsers.add_parser("report_profit", help="Report profit of entered date")
+    profit.add_argument("-d", "--date", type=valid_date, help="Report profit - format dd/mm/yyyy", default=advance_time())
+
+    graphic = subparsers.add_parser("graphic_revenue", help="Display revenue graphic of period between 2 given dates")
+    graphic.add_argument("-s", "--start_date", type=valid_date, help="Start date of period to display - format dd/mm/yyyy", required=True)
+    graphic.add_argument("-e", "--end_date", type=valid_date, help="Start date of period to display - format dd/mm/yyyy", required=True)
+
+    graphic = subparsers.add_parser("graphic_profit", help="Display profit graphic of period between 2 given dates")
+    graphic.add_argument("-s", "--start_date", type=valid_date, help="Start date of period to display - format dd/mm/yyyy", required=True)
+    graphic.add_argument("-e", "--end_date", type=valid_date, help="Start date of period to display - format dd/mm/yyyy", required=True)
+
+    return parser.parse_args()
 
 
 def main():
-    args = sys.argv
-    if args[1] == "report":
-        report = input("Of what do you want to see a report? Enter inventory / revenue / profit: ")
-        if report == "inventory":
-            day = input(f"Of what day do you want to see {report}? Enter today / yesterday / other: ")
-            if day == "today":
-                report_inventory(today)
-            elif day == "yesterday":
-                report_inventory(yesterday)
-            elif day == "other":
-                date = input("Enter a date (dd/mm/yyyy): ")
-                report_inventory(date)
+    args = parser()
 
-        elif report == "revenue":
-            day = input(f"Of what day do you want to see {report}? Enter today / yesterday / other: ")
-            if day == "today":
-                console.print(f"Today's revenue so far is €{report_revenue(today, day)}0", style="#fdca96")
-            elif day == "yesterday":
-                console.print(f"Yesterday's revenue was €{report_revenue(yesterday, day)}0", style="#fdca96")
-            elif day == "other":
-                date = input("Enter a date (dd/mm/yyyy): ")
-                console.print(f"On {date} the revenue was €{report_revenue(date, day)}0", style="#fdca96")
+    if args.command == "advance-time":
+        print(f"This is the new date: {advance_time(args.days)}")
 
-        elif report == "profit":
-            day = input(f"Of what day do you want to see {report}? Enter today / yesterday / other: ")
-            if day == "today":
-                console.print(f"Today's profit so far is €{report_profit(today, day)}0.", style="#fdca96")
-            elif day == "yesterday":
-                console.print(f"Yesterday's profit was €{report_profit(yesterday, day)}0", style="#fdca96")
-            elif day == "other":
-                date = input("Enter a date (dd/mm/yyyy): ")
-                console.print(f"On {date} the profit was €{report_profit(date, day)}0", style="#fdca96")
+    elif args.command == "buy":
+        buy_product(args.name, args.price, args.exp_date, args.quantity)
 
-    elif args[1] == "graphic":
-        income = input("Of which income do you want to see a graphic? Enter revenue / profit: ")
-        start_date = input("Enter a start date (dd/mm/yyyy): ")
-        end_date = input("Enter a date (dd/mm/yyyy): ")
-        if income == "revenue":
-            display_graphic(start_date, end_date, income)
-        elif income == "profit":
-            display_graphic(start_date, end_date, income)
-        else:
-            print(f"{income} is not a valid entry, please try again.")
+    elif args.command == "sell":
+        sell_product(args.name, args.quantity, args.price)
 
-    elif args[1] == "buy":
-        buy_product()
+    elif args.command == "report_inventory":
+        report_inventory(args.date)
 
-    elif args[1] == "sell":
-        sell_product()
+    elif args.command == "report_revenue":
+        console.print(f"The revenue on {args.date}: €{report_revenue(args.date, 'revenue')}0", style="#fdca96")
 
-    elif args[1] == "--help" or "-h":
-        console.print(f"usage: {os.getcwd()}        \n\
-            ARGUMENTS \n\
-            report:     report inventory, revenue or profit for today, yesterday or a specific past date.\n\
-            graphic:    display graphic of revenue or profit of a certain period in the past.\n\
-            sell:       remove a product from the inventory and add it to the sold file.\n\
-            buy:        add product to the inventory.\
-            \n\
-            The options to choose from will be displayed after entering an argument.",
-            style="#c8a2c8")
+    elif args.command == "report_profit":
+        console.print(f"The profit on {args.date}: €{report_profit(args.date, 'profit')}0", style="#ABCED8")
+    
+    elif args.command == "graphic_revenue":
+        display_graphic(args.start_date, args.end_date, "revenue")
 
+    elif args.command == "graphic_profit":
+        display_graphic(args.start_date, args.end_date, "profit")
+
+    else:
+        print ("\n Please enter valid input. \n"
+               " Optional commands are buy, sell, report_revenue, report_profit, graphic_revenue, graphic_profit"
+               "\n\n Type 'python super.py -h' for additional information.\n")
 
 if __name__ == "__main__":
     main()
