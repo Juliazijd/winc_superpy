@@ -1,8 +1,9 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import matplotlib.pyplot as plt
 from helpers.report_finance import report_profit, report_revenue
 
 
+# Creates list of all dates between the 2 given dates.
 def daterange(date1, date2):
     date_list = []
     for n in range(int ((date2 - date1).days)+1):
@@ -10,7 +11,8 @@ def daterange(date1, date2):
     return date_list
 
 
-def my_plotter(date_list, income):
+# Processes date list and creates graphic.
+def plotter(date_list, income):
     fig, ax = plt.subplots()
     result_list = []
     print(date_list)
@@ -24,6 +26,7 @@ def my_plotter(date_list, income):
     return plt.show()
     
 
+# Connects list of dates to the plotter.
 def display_graphic(sd, ed, income):
     date_list = []
 
@@ -37,4 +40,4 @@ def display_graphic(sd, ed, income):
     for dt in data:
         formatted_date = dt.strftime("%d/%m/%Y")
         date_list.append(formatted_date)
-    my_plotter(date_list, income)
+    plotter(date_list, income)
