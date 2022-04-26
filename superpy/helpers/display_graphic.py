@@ -15,7 +15,6 @@ def daterange(date1, date2):
 def plotter(date_list, income):
     fig, ax = plt.subplots()
     result_list = []
-    print(date_list)
     for date in date_list:
         if income == "profit":
             result_list.append(report_profit(date, income))
