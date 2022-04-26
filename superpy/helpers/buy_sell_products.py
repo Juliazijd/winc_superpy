@@ -9,23 +9,32 @@ console = Console()
 
 current_date = date.today().strftime("%d/%m/%Y")
 
-
 # Generates unique ID for each new line in each csv file
 def generate_id(file_name):
-    with open(file_name, "r") as csvfile:
-        lines = csvfile.readlines()
+    with open(file_name, "r") as file:
+        csvReader = csv.reader(file)
+        lines = []
+        for line in csvReader:
+            if line != []:
+                lines.append(line)
+
         if len(lines) == 1:
             id_number = f"0{str(1)}"
             return id_number
         else:
             last_added = lines[-1]
-            id_number = last_added.split(",", 1)[0]
-            id_number = str(int(id_number) + 1)
+            id_number = str(int(last_added[0]) + 1)
             if len(id_number) < 2:
                 id_number = f"0{str(id_number)}"
 
-        csvfile.close()    
-
+    # Getting rid of blank lines
+    f = open(file_name, "w+")
+    f.truncate()
+    f.close()
+    with open(file_name, "w", newline="") as newfile:
+        write = csv.writer(newfile)
+        write.writerows(lines)
+        
     return id_number
 
 

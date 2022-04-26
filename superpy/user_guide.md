@@ -80,7 +80,7 @@ Optional argument:
 Example:
 <br>
     ```
-    python super.py report_inventory 24/04/2022
+    python super.py report_inventory -d 24/04/2022
     ```
     A table with the inventory on April 24 will be displayed:
 <br><br>
@@ -97,7 +97,7 @@ Optional argument:
 Example:
 <br>
     ```
-    python super.py report_revenue 24/04/2022
+    python super.py report_revenue -d 24/04/2022
     ```
     The revenue of April 24 will be displayed:
 <br><br>
@@ -114,7 +114,7 @@ Optional argument:
 Example:
 <br>
     ```
-    python super.py report_profit 24/04/2022
+    python super.py report_profit -d 24/04/2022
     ```
     The revenue of April 24 will be displayed:
 <br><br>
