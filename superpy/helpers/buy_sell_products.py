@@ -7,8 +7,6 @@ from rich.console import Console
 
 console = Console()
 
-current_date = date.today().strftime("%d/%m/%Y")
-
 # Generates unique ID for each new line in each csv file
 def generate_id(file_name):
     with open(file_name, "r") as file:
@@ -28,7 +26,7 @@ def generate_id(file_name):
                 id_number = f"0{str(id_number)}"
 
     # Getting rid of blank lines
-    f = open(file_name, "w+")
+    f = open(file_name, "w+", newline="")
     f.truncate()
     f.close()
     with open(file_name, "w", newline="") as newfile:
@@ -51,9 +49,9 @@ def get_total_stock(product):
 
 
 # Adds new product to inventory file
-def buy_product(name, price, exp_date, quantity):
+def buy_product(currentday, name, price, exp_date, quantity):
     id = generate_id("data/inventory.csv")
-    new_product = [id, name, current_date, price, exp_date, quantity]
+    new_product = [id, name, currentday, price, exp_date, quantity]
     with open("data/inventory.csv", "a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(new_product)
@@ -101,7 +99,7 @@ def update_inventory_file(inventory_dict):
 # When a product is sold, this function checks if there is enough stock is available for selling 
 # by checking quantities and expiration dates. 
 # It automatically removes sold and/or expired stock.
-def check_and_update_stock(product_name, sold_quantity, sell_price):
+def check_and_update_stock(product_name, sold_quantity, sell_price, sell_date):
     products_in_stock = []
     with open("data/inventory.csv", "r") as csvfile:
         readCSV = csv.reader(csvfile,delimiter=",")
@@ -115,7 +113,7 @@ def check_and_update_stock(product_name, sold_quantity, sell_price):
             
             if product["product_name"] == product_name:
                 exp = datetime.strptime(product["exp_date"], "%d/%m/%Y")
-                cur = datetime.strptime(current_date, "%d/%m/%Y")
+                cur = datetime.strptime(sell_date, "%d/%m/%Y")
                 
                 if cur < exp:
                     stock = int(product["quantity"])
@@ -124,7 +122,7 @@ def check_and_update_stock(product_name, sold_quantity, sell_price):
                         stock = stock + updated_stock
                         stock = stock - sold_quantity
                         product["quantity"] = str(stock)
-                        update_csv_file(product, sold_quantity, sell_price, current_date, "data/sold.csv")
+                        update_csv_file(product, sold_quantity, sell_price, sell_date, "data/sold.csv")
                         if stock <= 0: products_in_stock.remove(product)
                         console.print(f"{sold_quantity} pieces of {product_name} are removed from inventory.", style="#FBDBDF")
                         return products_in_stock
@@ -150,11 +148,11 @@ def check_and_update_stock(product_name, sold_quantity, sell_price):
 
 
 # Removes products from inventory.
-def sell_product(sold_product_name, sold_quantity, sell_price):
+def sell_product(sold_product_name, sold_quantity, sell_price, sell_date):
     total_stock = get_total_stock(sold_product_name)
 
     if total_stock >= sold_quantity:
-        update_inventory_file(check_and_update_stock(sold_product_name, sold_quantity, sell_price))
+        update_inventory_file(check_and_update_stock(sold_product_name, sold_quantity, sell_price, sell_date))
 
     elif total_stock > 0:
         return console.print(f"You do not have enough stock, you can sell a maximum of {total_stock} 😅", style="#fdca96")

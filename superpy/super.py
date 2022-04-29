@@ -1,5 +1,4 @@
 import argparse
-
 from matplotlib.pyplot import title
 from helpers.buy_sell_products import buy_product, sell_product
 from helpers.report_inventory import report_inventory
@@ -90,10 +89,10 @@ def main():
         print(f"This is the new date: {advance_time(args.days)}")
 
     elif args.command == "buy":
-        buy_product(args.name, args.price, args.exp_date, args.quantity)
+        buy_product(advance_time(), args.name, args.price, args.exp_date, args.quantity)
 
     elif args.command == "sell":
-        sell_product(args.name, args.quantity, args.price)
+        sell_product(args.name, args.quantity, args.price, advance_time())
 
     elif args.command == "report_inventory":
         report_inventory(args.date)
